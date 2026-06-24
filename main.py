@@ -1,6 +1,111 @@
-def main():
-    print("Hello from wordle-clone!")
+#Wordle v6.py
+
+#This version includes fixes to the double letter issue
+
+#imports
+import random
+import sys
+from colorama import Fore, Style, init
+from word_list_file import word_options_as_list
+from json_modification import cleanup_data, keep_track_of_when_used
+
+init()
+
+#Here is where it will check that the user wants to play
+def play():
+    first_response = input("\nWould you like to play Wordle: ").lower()
+    
+    if first_response in ["not now", "no", "n"]:
+        print("\nAlright, maybe later\n")
+        play()
+    elif first_response in ["yes", "yeah", "y"]:
+        print("\nThe rules are:\n-You have to choose a five letter word\n-You want to guess the same word that the computer chose\n-You have to use real English words\n-Green indicates that it is the right letter\n-Yellow indicates that is in the word, but the wrong location\n-White indicates that it is not in the word\n\nAlright, let's play!")
+    else:
+        print("\nThat is not one of the options, please choose yes or no\n")
+        play()
+
+#Here is where the computer chooses its word
+def computer_as_word(word_options_as_list):
+    computer_choice = random.choice(word_options_as_list)
+    return computer_choice
+
+#Here is where the computer word gets split into a list
+def computer(computer_choice):
+    computer_list = list(computer_choice)
+    return computer_list
+
+#Here is where I create the string of the word for the user
+def user1(word_options_as_list):
+    user_choice = input("\nTry a word: ").lower()
+    if user_choice not in word_options_as_list:
+        print("That is not a valid word")
+        return user1(word_options_as_list)
+    else:
+        return user_choice
+
+#Here is where the user word is converted to a list
+def user2(user_choice):
+    user_list = list(user_choice)
+    return user_list
+
+#Here is the list of the alphabet that will be motified by available function
+unused_letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l","m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+
+#Here is where it will show the user what letters are still available to use
+def available(user_list):
+
+    global unused_letters
+
+    for a in user_list:
+        if a in unused_letters:
+            unused_letters.remove(a)
+    print("\n\nThese are the letters that you have not used:\n\n ", unused_letters)
+
+#Here is where we check if the user actually wins or loses
+def check_win(computer_list, user_list, user_choice):
+    if user_list == computer_list:
+        sys.exit(Fore.GREEN + user_choice + Style.RESET_ALL + "\nYou have found the wordle!")
+    else:
+        letter_counts = {}
+        for letter in computer_list:
+            letter_counts[letter] = letter_counts.get(letter, 0) + 1
+        
+        result = [''] * len(user_list)
+        for i in range(len(user_list)):
+            if user_list[i] == computer_list[i]:
+                result[i] = Fore.GREEN + user_list[i] + Style.RESET_ALL
+                letter_counts[user_list[i]] -= 1
+        
+        for i in range(len(user_list)):
+            if result[i] == '': 
+                if user_list[i] in letter_counts and letter_counts[user_list[i]] > 0:
+                    result[i] = Fore.YELLOW + user_list[i] + Style.RESET_ALL
+                    letter_counts[user_list[i]] -= 1
+                else:
+                    result[i] = user_list[i]
+        
+        print(''.join(result))
+    
+    available(user_list)
 
 
-if __name__ == "__main__":
-    main()
+#Here is where they can try again
+def repeat_two_to_six(word_options_as_list, computer_list, computer_choice):
+    for attempt in range(5):
+        user_choice = user1(word_options_as_list)
+        user_list = user2(user_choice)
+        check_win(computer_list, user_list, user_choice)
+    sys.exit("\nUnfortunately, you have not gotten it. Thanks for playing!\nThe correct word was: " + computer_choice)
+
+#Here is where I call the functions to actually happen
+play()
+cleanup_data()
+computer_choice = computer_as_word(word_options_as_list)
+most_recent_words = keep_track_of_when_used(computer_choice)
+if computer_choice in most_recent_words:
+    computer_choice = computer_as_word(word_options_as_list)
+computer_list = computer(computer_choice)
+user_choice = user1(word_options_as_list)
+user_list = user2(user_choice)
+check_win(computer_list, user_list, user_choice)
+repeat_two_to_six(word_options_as_list, computer_list, computer_choice)
