@@ -1,8 +1,3 @@
-#Wordle v6.py
-
-#This version includes fixes to the double letter issue
-
-#imports
 import random
 import sys
 from colorama import Fore, Style, init
